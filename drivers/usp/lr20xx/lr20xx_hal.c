@@ -67,10 +67,10 @@ static lr20xx_hal_status_t lr20xx_hal_wait_on_busy( const void* context )
         {
             break;
         }
-        else
-        {
-            k_usleep( 100 );
-        }
+        // else
+        // {
+        //     k_usleep( 100 );
+        // }
     }
 
     if( !timed_out )

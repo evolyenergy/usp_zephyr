@@ -390,6 +390,5 @@
 				irq-mask = <LR20XX_SYSTEM_IRQ_ALL_MASK>;
 			};
 		};
-
 	};
 };

@@ -54,7 +54,6 @@ This application demonstrates **continuous transmission** capabilities for testi
 
 ## Compilation
 
-### USP Zephyr
 
 **Build standard LoRa CW mode with INFINITE PREAMBLE:**
 ```bash
@@ -68,25 +67,9 @@ west build --pristine --board xiao_nrf54l15/nrf54l15/cpuapp --shield semtech_lor
 
 Flash:
 ```bash
-west flash
+west flash --runner pyocd
 ```
 
-### USP
-
-**Build standard LoRa CW mode with INFINITE PREAMBLE:**
-``` bash
-rm -Rf build/ ; cmake -L -S examples  -B build -DCMAKE_BUILD_TYPE=MinSizeRel -DBOARD=NUCLEO_L476 -DRAC_RADIO=lr2021 -DINFINITE_PREAMBLE=ON -G Ninja; cmake --build build --target tx_cw
-```
-
-**Build standard LoRa CW mode with CONTINUOUS WAVE:**
-```
-rm -Rf build/ ; cmake -L -S examples  -B build -DCMAKE_BUILD_TYPE=MinSizeRel -DBOARD=NUCLEO_L476 -DRAC_RADIO=lr2021 -G Ninja; cmake --build build --target tx_cw
-```
-
-Flash:
-``` bash
-openocd -f interface/stlink.cfg -f target/stm32l4x.cfg -c "program build/tx_cw verify reset exit"
-```
 
 ## Usage
 

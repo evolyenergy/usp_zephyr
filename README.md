@@ -1,5 +1,11 @@
 # USP For Zephyr
 
+> **USP RELEASE v1.1.1 - Feature Release : UNSTABLE**
+>
+> The FLRC feature is patent pending.
+>
+> ⚠️ **Warning**: This preview release is not intended for production use. A stable release will be available soon
+
 **USP for Zephyr** integrates Semtech’s Unified Software Platform **[USP](https://github.com/Lora-net/usp)** into the Zephyr RTOS, which leverage fourth-generation LoRa® technology and providing ready-to-use advanced multi-protocol support.
 
 This **out-of-tree Zephyr module** supports flexible integration ([see Zephyr topologies](https://docs.zephyrproject.org/latest/develop/west/workspaces.html#topologies-supported)):
@@ -9,13 +15,13 @@ This **out-of-tree Zephyr module** supports flexible integration ([see Zephyr to
 
 For an in-depth explanation of system components, interactions, and design principles, refer to [USP Architecture](doc/USP_Architecture.md).
 
-Current Version is v1.0.0:
+Current Version is v1.1.1:
 - [Changelog](CHANGELOG.md)
 - [known limitations](doc/KNOWN_LIMITATIONS.md)
 
 ## Prerequisites
 
-Install Zephyr 4.2 following : https://docs.zephyrproject.org/latest/develop/getting_started/index.html. \
+Install Zephyr 4.3 following : https://docs.zephyrproject.org/latest/develop/getting_started/index.html. \
 If using a natively-supported MCU Board, you may test it with `blinky` sample. \
 Note: Advanced users may install only the dependancy tools & SDK.
 
@@ -23,7 +29,9 @@ Notes regarding SDK & Toolchains :
 - The Zephyr SDK contains toolchains for each of Zephyr’s supported architectures (i.e arm, x86, ...). That does include a compiler, assembler, linker and other programs required to build and debug Zephyr applications.
 - Only the SDK files of the targeted MCU may be installed
 - **Zephyr RTOS Version Support:**
-  - Samples are Validated<sup>1</sup> with **Zephyr RTOS v4.2 & Zephyr SDK v0.17.0.**
+  - Samples are Validated<sup>1</sup> with **Zephyr RTOS v4.3.0 & Zephyr SDK v0.17.0.**
+  - Samples are Buildable<sup>1</sup> with **Zephyr RTOS v4.3-branch & Zephyr SDK v0.17.0.** (This branch is recommended to get fixes from Zephyr)
+  - Samples are Buildable<sup>1</sup> with **Zephyr RTOS v4.2.0 & Zephyr SDK v0.17.0.** (see [known limitations](doc/KNOWN_LIMITATIONS.md) for limitations)
   - Samples are Buildable<sup>1</sup> with **Zephyr RTOS v3.7.0 LTS & Zephyr SDK v0.16.9.** (see [Supported Boards & Shields](#supported-boards--shields) for limitations)
 - Follow steps [here](https://docs.zephyrproject.org/4.2.0/develop/getting_started/index.html#install-the-zephyr-sdk) to install/update the Zephyr SDK on your specific platform. This needs to be done only once.
 - Ensure your SDK is compliant with the used version of Zephyr RTOS : https://github.com/zephyrproject-rtos/sdk-ng/wiki/Zephyr-Version-Compatibility
@@ -129,7 +137,7 @@ application/my_project
 And compile & flash as usual :
 ```bash
 west build --board xiao_nrf54l15/nrf54l15/cpuapp --shield semtech_wio_lr2021 application/xxx
-west flash
+west flash --runner pyocd
 ```
 
 </details>
@@ -185,7 +193,7 @@ Using the Semtech LoRa Plus Xiao EVK (Xiao-nRF54L15 + LR2021-Wio) on `periodical
 ```bash
 cd zephyr_workspace
 west build --pristine --board xiao_nrf54l15/nrf54l15/cpuapp --shield semtech_wio_lr2021 usp_zephyr/samples/usp/lbm/periodical_uplink
-west flash
+west flash --runner pyocd
 ```
 
 All samples are located in [`samples/usp`](samples/usp/README.md) directory, you can use any supported board/shield as define in next section to build and flash other samples :
@@ -260,7 +268,7 @@ For more details on Samples, refer to [Samples Documentation](samples/usp/README
     >   | Type | Status<sup>1</sup> | Image | Command |
     >   |------|--------|--------|---------|
     >   | [**Nucleo-L476RG**](https://www.st.com/en/evaluation-tools/nucleo-l476rg.html) | Validated | <img src="doc/assets/Nucleo_L476RG.png" width="60"/> | `--board nucleo_l476rg/stm32l476xx` |
-    >   | [**Nucleo-U575ZI-Q**](https://www.st.com/en/evaluation-tools/nucleo-u575zi-q.html)| Buildable |<img src="doc/assets/Nucleo_U575ZI_Q.png" width="60"/> | `--board nucleo_u575zi_q/stm32u575xx` |
+    >   | [**Nucleo-U575ZI-Q**](https://www.st.com/en/evaluation-tools/nucleo-u575zi-q.html)| Buildable (except *Hardware Modem* sample where Nucleo-U575ZI-Q is not supported) |<img src="doc/assets/Nucleo_U575ZI_Q.png" width="60"/> | `--board nucleo_u575zi_q/stm32u575xx` |
 
 -   **RF shield build option**
 
@@ -305,7 +313,7 @@ For more details on Samples, refer to [Samples Documentation](samples/usp/README
 
     >   | Type | Status<sup>1</sup> | Image | Command[<sup>2</sup> |
     >   |------|--------|--------|---------|
-    >   | **Wio-LR2021<br>LoRa Plus Expansion Board<sup>3</sup>** | Buildable | <img src="doc/assets/LoRa_Plus_Expansion_Board_wio.png" width="80"/> | `--shield semtech_nrf54l15dk_mbed_interface --shield semtech_mbed_wio_interface --shield semtech_wio_lr2021` |
+    >   | **Wio-LR2021<br>LoRa Plus Expansion Board<sup>3</sup>** | Buildable | <img src="doc/assets/LoRa_Plus_Expansion_Board_wio.png" width="80"/> | `<code>--shield semtech_nrf54l15dk_mbed_interface --shield semtech_mbed_wio_interface --shield semtech_wio_lr2021`</code> or <code>--shield semtech_nrf54l15dk_mbed_interface --shield semtech_mbed_wio_interface --shield semtech_loraplus_expansion_board --shield semtech_wio_lr2021</code> |
     >   | **LR11xx<br>(multi-option)** | Buildable | <img src="doc/assets/LR1110.jpg" width="80"/>   | <code>--shield semtech_nrf54l15dk_mbed_interface --shield semtech_lr1110mb1xxs</code> or <code>--shield semtech_nrf54l15dk_mbed_interface --shield semtech_lr1120mb1xxs</code> or <code>--shield semtech_nrf54l15dk_mbed_interface --shield semtech_lr1121mb1xxs</code> |
     >   | **SX126x** | Buildable | <img src="doc/assets/SX1261.jpg" width="80"/> | e.g. <code>--shield semtech_nrf54l15dk_mbed_interface --shield semtech_sx1261mb2bas</code> (cf. [boards/shields/semtech_sx126xmb2xxs](boards/shields/semtech_sx126xmb2xxs)) |
     <br>

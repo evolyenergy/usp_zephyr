@@ -24,7 +24,6 @@ For more details about the GNSS and Wi-Fi services, please refer to the document
 
 Geolocation services documentation: [LOCAL](../../../../../modules/lib/usp/protocols/lbm_lib/smtc_modem_core/geolocation_services/README.md)  [ONLINE](https://github.com/Lora-net/usp/blob/main/protocols/lbm_lib/smtc_modem_core/geolocation_services/README.md)
 
-
 ## Key Features
 
 - **Dual Geolocation Methods**: GNSS (GPS + BeiDou) and Wi-Fi scanning
@@ -56,8 +55,6 @@ It is necessary to use a custom profile due to payload size constraints.
 
 ### LoRaWAN related configuration
 
-#### USP Zephyr
-
 Configure your LoRaWAN credentials in `boards/user_keys.overlay`:
 
 ```dts
@@ -71,15 +68,6 @@ Configure your LoRaWAN credentials in `boards/user_keys.overlay`:
     };
 };
 ```
-
-#### USP
-
-The `example_options.h` header file defines several constants to configure the LoRaWAN parameters (region, keys).
-
-* MODEM_EXAMPLE_REGION: Selects the regulatory region. This example has been tested for SMTC_MODEM_REGION_EU_868.
-* USER_LORAWAN_DEVICE_EUI: LoRaWAN device EUI for user defined credentials.
-* USER_LORAWAN_JOIN_EUI: LoRaWAN Join EUI for user defined credentials.
-* USER_LORAWAN_APP_KEY: LoRaWAN App Key for user defined credentials.
 
 #### Common
 
@@ -119,11 +107,9 @@ The events to be handled are the following:
 
 ## Tools
 
-`Almanac full update`, `LR11xx flasher`, `WiFi region detector` Tools are not delivered in this software release (see KNOWN Limitations).
+`Almanac full update`, `LR11xx flasher`, `WiFi region detector` Tools are delivered in this software release (see KNOWN Limitations).
 
 ## Compilation
-
-### USP Zephyr
 
 **Build:**
 ```bash
@@ -133,17 +119,6 @@ west build --pristine --board nrf52840dk/nrf52840 --shield semtech_lr1110mb1xxs 
 **Flash the firmware:**
 ```bash
 west flash
-```
-
-### USP 
-**Build sample:**
-```
-rm -Rf build/ ; cmake -L -S examples  -B build -DAPP=GEOLOCATION -DCMAKE_BUILD_TYPE=MinSizeRel -DBOARD=NUCLEO_L476 -DRAC_RADIO=lr1120 -G Ninja; cmake --build build --target geolocation
-```
-
-**Example of `openocd`command to flash:**
-```bash
-openocd -f interface/stlink.cfg -f target/stm32l4x.cfg -c "adapter serial <SERIAL_NUMBER>" -c "program build/geolocation verify reset exit"
 ```
 
 ## Usage

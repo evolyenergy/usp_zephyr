@@ -20,7 +20,7 @@ config SEMTECH_LR20XX_BLE
 
 config LR20XX_HAL_SPI_BUFFER_MAX_LENGTH
 	int "Max length of SPI TX/RX buffers"
-	default 260
+	default 520
 	range 0 65535
 
 endif

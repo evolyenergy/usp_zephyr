@@ -39,6 +39,7 @@
 #include <zephyr/drivers/spi.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/pm/device.h>
+#include <zephyr/version.h>
 
 #include <zephyr/usp/lora_lbm_transceiver.h>
 
@@ -232,7 +233,7 @@ static int lr20xx_init( const struct device* dev )
             ret = gpio_pin_configure_dt( &dio_config.gpio, GPIO_INPUT );
             if( ret < 0 )
             {
-                LOG_ERR( "Could not configure DIO %d gpio", dio_config.dio );
+                LOG_ERR( "Could not configure DIO %d gpio", ( int ) dio_config.dio );
                 return ret;
             }
 
@@ -325,34 +326,40 @@ static int lr20xx_pm_action( const struct device* dev, enum pm_device_action act
         .rf_switch_cfg = DT_PROP_OR( node_id, rf_sw, ( 0 ) ),                     \
     }
 
-#define LR20XX_CONFIG( node_id )                                                                                       \
-    {                                                                                                                  \
-        .spi = SPI_DT_SPEC_GET( node_id, LR20XX_SPI_OPERATION, 0 ), .reset = GPIO_DT_SPEC_GET( node_id, reset_gpios ), \
-        .busy            = GPIO_DT_SPEC_GET( node_id, busy_gpios ),                                                    \
-        .dios_config_num = ARRAY_SIZE( lr20xx_dios_config_##node_id ), .dios_config = lr20xx_dios_config_##node_id,    \
-        .hf_clk_out_scaling = DT_PROP_OR( node_id, hf_clk_out_scaling, ( 0 ) ),                                        \
-        .tcxo_cfg = LR20XX_CFG_TCXO( node_id ), .lf_clck_cfg = LR20XX_CFG_LF_CLK( node_id ),                           \
-        .reg_mode = DT_PROP( node_id, reg_mode ), .tx_power_offset_db = DT_PROP_OR( node_id, tx_power_offset, 0 ),     \
-        .rx_boosted_cfg  = ( lr20xx_radio_common_rx_path_boost_mode_t ) DT_PROP_OR( node_id, rx_boost_cfg, 0 ),        \
-        .pa_ramp_time    = ( lr20xx_radio_common_ramp_time_t ) DT_PROP_OR( node_id, pa_ramp_time, 5 ),                 \
-        .pa_lf_cfg_table = ( lr20xx_pa_pwr_cfg_t* ) DT_CAT( pa_lf_cfg_table_, node_id ),                               \
-        .pa_hf_cfg_table = ( lr20xx_pa_pwr_cfg_t* ) DT_CAT( pa_hf_cfg_table_, node_id ),                               \
-        .tx_dbm_to_ua_reg_mode_dcdc_lf_vreg = ( uint32_t* ) DT_CAT( tx_dbm_to_ua_reg_mode_dcdc_lf_vreg_, node_id ),    \
-        .tx_dbm_to_ua_reg_mode_ldo_lf_vreg  = ( uint32_t* ) DT_CAT( tx_dbm_to_ua_reg_mode_ldo_lf_vreg_, node_id ),     \
-        .tx_dbm_to_ua_reg_mode_dcdc_hf_vreg = ( uint32_t* ) DT_CAT( tx_dbm_to_ua_reg_mode_dcdc_hf_vreg_, node_id ),    \
-        .rx_bw_to_ua_reg_mode_dcdc_lf_vreg  = ( uint32_t* ) DT_CAT( rx_bw_to_ua_reg_mode_dcdc_lf_vreg_, node_id ),     \
-        .rx_bw_to_ua_reg_mode_dcdc_hf_vreg  = ( uint32_t* ) DT_CAT( rx_bw_to_ua_reg_mode_dcdc_hf_vreg_, node_id ),     \
-        .rx_bw_to_ua_reg_mode_dcdc_lf_vreg_boosted =                                                                   \
-            ( uint32_t* ) DT_CAT( rx_bw_to_ua_reg_mode_dcdc_lf_vreg_boosted_, node_id ),                               \
-        .rx_bw_to_ua_reg_mode_dcdc_hf_vreg_boosted =                                                                   \
-            ( uint32_t* ) DT_CAT( rx_bw_to_ua_reg_mode_dcdc_hf_vreg_boosted_, node_id ),                               \
-        .rx_bw_to_ua_reg_mode_ldo_lf_vreg = ( uint32_t* ) DT_CAT( rx_bw_to_ua_reg_mode_ldo_lf_vreg_, node_id ),        \
-        .rx_bw_to_ua_reg_mode_ldo_hf_vreg = ( uint32_t* ) DT_CAT( rx_bw_to_ua_reg_mode_ldo_hf_vreg_, node_id ),        \
-        .rx_bw_to_ua_reg_mode_ldo_lf_vreg_boosted =                                                                    \
-            ( uint32_t* ) DT_CAT( rx_bw_to_ua_reg_mode_ldo_lf_vreg_boosted_, node_id ),                                \
-        .rx_bw_to_ua_reg_mode_ldo_hf_vreg_boosted =                                                                    \
-            ( uint32_t* ) DT_CAT( rx_bw_to_ua_reg_mode_ldo_hf_vreg_boosted_, node_id ),                                \
-        .calibration_freqs = ( uint32_t* ) DT_CAT( calibration_freqs_, node_id ),                                      \
+#if ZEPHYR_VERSION_CODE < ZEPHYR_VERSION( 4, 3, 0 )
+#define LR20XX_SPI_SPEC( node_id ) SPI_DT_SPEC_GET( node_id, LR20XX_SPI_OPERATION, 0 )
+#else
+#define LR20XX_SPI_SPEC( node_id ) SPI_DT_SPEC_GET( node_id, LR20XX_SPI_OPERATION )
+#endif
+
+#define LR20XX_CONFIG( node_id )                                                                                    \
+    {                                                                                                               \
+        .spi = LR20XX_SPI_SPEC( node_id ), .reset = GPIO_DT_SPEC_GET( node_id, reset_gpios ),                       \
+        .busy            = GPIO_DT_SPEC_GET( node_id, busy_gpios ),                                                 \
+        .dios_config_num = ARRAY_SIZE( lr20xx_dios_config_##node_id ), .dios_config = lr20xx_dios_config_##node_id, \
+        .hf_clk_out_scaling = DT_PROP_OR( node_id, hf_clk_out_scaling, ( 0 ) ),                                     \
+        .tcxo_cfg = LR20XX_CFG_TCXO( node_id ), .lf_clck_cfg = LR20XX_CFG_LF_CLK( node_id ),                        \
+        .reg_mode = DT_PROP( node_id, reg_mode ), .tx_power_offset_db = DT_PROP_OR( node_id, tx_power_offset, 0 ),  \
+        .rx_boosted_cfg  = ( lr20xx_radio_common_rx_path_boost_mode_t ) DT_PROP_OR( node_id, rx_boost_cfg, 0 ),     \
+        .pa_ramp_time    = ( lr20xx_radio_common_ramp_time_t ) DT_PROP_OR( node_id, pa_ramp_time, 5 ),              \
+        .pa_lf_cfg_table = ( lr20xx_pa_pwr_cfg_t* ) DT_CAT( pa_lf_cfg_table_, node_id ),                            \
+        .pa_hf_cfg_table = ( lr20xx_pa_pwr_cfg_t* ) DT_CAT( pa_hf_cfg_table_, node_id ),                            \
+        .tx_dbm_to_ua_reg_mode_dcdc_lf_vreg = ( uint32_t* ) DT_CAT( tx_dbm_to_ua_reg_mode_dcdc_lf_vreg_, node_id ), \
+        .tx_dbm_to_ua_reg_mode_ldo_lf_vreg  = ( uint32_t* ) DT_CAT( tx_dbm_to_ua_reg_mode_ldo_lf_vreg_, node_id ),  \
+        .tx_dbm_to_ua_reg_mode_dcdc_hf_vreg = ( uint32_t* ) DT_CAT( tx_dbm_to_ua_reg_mode_dcdc_hf_vreg_, node_id ), \
+        .rx_bw_to_ua_reg_mode_dcdc_lf_vreg  = ( uint32_t* ) DT_CAT( rx_bw_to_ua_reg_mode_dcdc_lf_vreg_, node_id ),  \
+        .rx_bw_to_ua_reg_mode_dcdc_hf_vreg  = ( uint32_t* ) DT_CAT( rx_bw_to_ua_reg_mode_dcdc_hf_vreg_, node_id ),  \
+        .rx_bw_to_ua_reg_mode_dcdc_lf_vreg_boosted =                                                                \
+            ( uint32_t* ) DT_CAT( rx_bw_to_ua_reg_mode_dcdc_lf_vreg_boosted_, node_id ),                            \
+        .rx_bw_to_ua_reg_mode_dcdc_hf_vreg_boosted =                                                                \
+            ( uint32_t* ) DT_CAT( rx_bw_to_ua_reg_mode_dcdc_hf_vreg_boosted_, node_id ),                            \
+        .rx_bw_to_ua_reg_mode_ldo_lf_vreg = ( uint32_t* ) DT_CAT( rx_bw_to_ua_reg_mode_ldo_lf_vreg_, node_id ),     \
+        .rx_bw_to_ua_reg_mode_ldo_hf_vreg = ( uint32_t* ) DT_CAT( rx_bw_to_ua_reg_mode_ldo_hf_vreg_, node_id ),     \
+        .rx_bw_to_ua_reg_mode_ldo_lf_vreg_boosted =                                                                 \
+            ( uint32_t* ) DT_CAT( rx_bw_to_ua_reg_mode_ldo_lf_vreg_boosted_, node_id ),                             \
+        .rx_bw_to_ua_reg_mode_ldo_hf_vreg_boosted =                                                                 \
+            ( uint32_t* ) DT_CAT( rx_bw_to_ua_reg_mode_ldo_hf_vreg_boosted_, node_id ),                             \
+        .calibration_freqs = ( uint32_t* ) DT_CAT( calibration_freqs_, node_id ),                                   \
     }
 
 #define LR20XX_DEVICE_INIT( node_id )                                                            \

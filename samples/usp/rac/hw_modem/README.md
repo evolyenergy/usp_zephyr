@@ -46,7 +46,6 @@ hw-modem-led-scan-gpios = <&arduino_header 11 GPIO_ACTIVE_HIGH>;
 
 ## Compilation
 
-### USP Zephyr
 
 **Build:**
 ```bash
@@ -55,29 +54,7 @@ west build --pristine --board xiao_nrf54l15/nrf54l15/cpuapp --shield semtech_lor
 
 **Flash the firmware:**
 ```bash
-west flash
-```
-
-### USP 
-**Build sample:**
-- hw_modem for lr2021 (no geolocation)
-```
-rm -Rf build/ ; cmake -L -S examples  -B build -DAPP=HW_MODEM -DCMAKE_BUILD_TYPE=MinSizeRel -DBOARD=NUCLEO_L476 -DRAC_RADIO=lr2021 -DLBM_GEOLOCATION=OFF -G Ninja; cmake --build build --target hw_modem
-```
-
-- hw_modem for lr1120
-```
-rm -Rf build/ ; cmake -L -S examples  -B build -DAPP=HW_MODEM -DCMAKE_BUILD_TYPE=MinSizeRel -DBOARD=NUCLEO_L476 -DRAC_RADIO=lr2021 -G Ninja; cmake --build build --target hw_modem
-```
-
-- hw_modem for lr1120 with LBM_CRYPTO=LR11XX
-```
-rm -Rf build/ ; cmake -L -S examples  -B build -DAPP=HW_MODEM -DCMAKE_BUILD_TYPE=MinSizeRel -DBOARD=NUCLEO_L476 -DRAC_RADIO=lr1120 -DLBM_RELAY_TX=OFF -DLBM_RELAY_RX=OFF -DLBM_CRYPTO=LR11XX -G Ninja; cmake --build build --target hw_modem
-```
-
-**Example of `openocd`command to flash:**
-```bash
-openocd -f interface/stlink.cfg -f target/stm32l4x.cfg -c "adapter serial <SERIAL_NUMBER>" -c "program build/hw_modem verify reset exit"
+west flash --runner pyocd
 ```
 
 
@@ -179,3 +156,4 @@ response = ser.read(100)
 ## Limitations
 
 - On NUCLEO-STM32L476RG, due to the USART, the power mode is deactivated
+- The NUCLEO-U575ZI-Q is not supported
