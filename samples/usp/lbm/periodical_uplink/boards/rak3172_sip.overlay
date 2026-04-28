@@ -1,0 +1,54 @@
+/*
+ * Copyright (c) 2026 Semtech Corporation
+ * SPDX-License-Identifier: Apache-2.0
+ * Created by Charles-Henri Hallard (charles@evolyenergy.com)
+ *
+ * Board overlay for rak3172_sip (STM32WLE5JC, HP PA, +22 dBm).
+ *
+ * The base board DTS (rak3172_sip.dtsi) already contains all hardware
+ * properties needed by the USP binding (property names aligned with native
+ * Zephyr driver):
+ *   - tx-enable-gpios (PA1 = RF_TX), rx-enable-gpios (PA0 = RF_RX)
+ *   - dio3-tcxo-voltage = <SX126X_DIO3_TCXO_1V7>
+ *   - tcxo-power-startup-delay-ms = <5>
+ *   - power-amplifier-output = "rfo-hp"
+ *   - rfo-hp-max-power = <22>
+ *
+ * We only need to:
+ *   1. Replace the compatible with "semtech,sx126x-stm32wl".
+ *   2. Add spi-max-frequency (required by spi-device.yaml).
+ *   3. Add regulator-ldo (boolean, LDO mode — no DC-DC on this board).
+ *   4. Wire up aliases/chosen for the USP framework.
+ */
+
+&subghzspi {
+    status = "okay";
+
+    lora_usp: radio@0 {
+        /* Use the STM32WL internal-radio USP driver. */
+        compatible = "semtech,sx126x-stm32wl";
+        status = "okay";
+
+        /* SPI speed (required by spi-device.yaml which we inherit) */
+        spi-max-frequency = <8000000>;
+
+        /* All other radio properties are inherited from rak3172_sip.dtsi */
+
+        /* LDO regulator (no DC-DC on RAK3172-SiP) */
+        regulator-ldo;
+    };
+};
+
+/* Alias required by USP sample applications, and chosen for the USP thread */
+/ {
+    aliases {
+        lora-transceiver0 = &lora_usp;
+    };
+
+    chosen {
+        zephyr,lorawan-transceiver = &lora_usp;
+    };
+};
+
+/* LoRaWAN credentials (placeholder — replace with real values before flashing) */
+#include "user_keys.overlay"

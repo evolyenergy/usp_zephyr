@@ -1,0 +1,60 @@
+/*
+ * Copyright (c) 2026 Semtech Corporation
+ * SPDX-License-Identifier: Apache-2.0
+ * Created by Charles-Henri Hallard (charles@evolyenergy.com)
+ *
+ * Board overlay for evoly_3172 (STM32WLE5 / RAK3172).
+ *
+ * The STM32WLE5 has an SX1262-compatible radio embedded in the SoC.
+ * It is accessed through the internal subghzspi peripheral. Reset and
+ * busy signals are internal (RCC / PWR registers), not GPIO pins.
+ * DIO1 is delivered via NVIC IRQ 50 (SUBGHZ_Radio_IRQn).
+ *
+ * The base board DTS (evoly_3172.dts) defines radio@0 with compatible
+ * "st,stm32wl-subghz-radio" and already contains these properties that
+ * match the USP binding names after our alignment with native Zephyr:
+ *   - tx-enable-gpios / rx-enable-gpios (PA1 = RF_TX, PA0 = RF_RX)
+ *   - dio3-tcxo-voltage / tcxo-power-startup-delay-ms
+ *
+ * We replace the compatible with "semtech,sx126x-stm32wl" and add the
+ * USP-specific properties not present in the native binding.
+ */
+
+&subghzspi {
+    status = "okay";
+
+    lora_usp: radio@0 {
+        /* Replace the compatible: use only the USP STM32WL binding.
+         * This avoids conflicts between the two binding property sets. */
+        compatible = "semtech,sx126x-stm32wl";
+        status = "okay";
+
+        /* SPI speed (required by spi-device.yaml which we inherit) */
+        spi-max-frequency = <8000000>;
+
+        /* RF switch (PA1 = TX, PA0 = RX), dio3-tcxo-voltage, and
+         * tcxo-power-startup-delay-ms are all inherited from the base
+         * board DTS — no overrides needed here. */
+
+        /* LP PA output, max +14 dBm */
+        power-amplifier-output = "rfo-lp";
+        rfo-lp-max-power       = <14>;
+
+        /* LDO regulator (no DC-DC on RAK3172) */
+        regulator-ldo;
+    };
+};
+
+/* Alias required by USP sample applications, and chosen for the USP thread */
+/ {
+    aliases {
+        lora-transceiver0 = &lora_usp;
+    };
+
+    chosen {
+        zephyr,lorawan-transceiver = &lora_usp;
+    };
+};
+
+/* LoRaWAN credentials (placeholder — replace with real values before flashing) */
+#include "user_keys.overlay"

@@ -1,0 +1,36 @@
+/*
+ * Copyright (c) 2026 Semtech Corporation
+ * SPDX-License-Identifier: Apache-2.0
+ * Created by Charles-Henri Hallard (charles@evolyenergy.com)
+ *
+ * Board overlay for rak3172lp_sip (STM32WLE5JC, LP PA).
+ *
+ * The base board DTS already contains all radio properties needed by the
+ * USP binding: RF switch (PA1/PA0 ACTIVE_HIGH), TCXO (DIO3 1.7V 5ms),
+ * PA config (rfo-lp +14dBm). No DC-DC inductor on SiP — LDO mode used.
+ */
+
+&subghzspi {
+    status = "okay";
+
+    lora_usp: radio@0 {
+        compatible = "semtech,sx126x-stm32wl";
+        status = "okay";
+        spi-max-frequency = <8000000>;
+
+        /* LDO regulator (no DC-DC on RAK3172-SiP) */
+        regulator-ldo;
+    };
+};
+
+/ {
+    aliases {
+        lora-transceiver = &lora_usp;
+    };
+
+    chosen {
+        zephyr,lorawan-transceiver = &lora_usp;
+        zephyr,console    = &usart2;
+        zephyr,shell-uart = &usart2;
+    };
+};

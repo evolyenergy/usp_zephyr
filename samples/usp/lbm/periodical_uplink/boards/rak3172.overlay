@@ -1,0 +1,69 @@
+/*
+ * Copyright (c) 2026 Semtech Corporation
+ * SPDX-License-Identifier: Apache-2.0
+ * Created by Charles-Henri Hallard (charles@evolyenergy.com)
+ *
+ * Board overlay for the official Zephyr RAK3172 board (STM32WLE5CC).
+ *
+ * The Zephyr rak3172.dtsi defines radio@0 under &subghzspi with
+ * compatible "semtech,sx1262" and RF switch on PC13 (FE_CTRL1 = TX)
+ * and PB8 (FE_CTRL2 = RX), HP PA at +22 dBm. It does not include
+ * TCXO properties (those are in the native lora driver overlay).
+ *
+ * Here we:
+ *   - Replace the compatible with "semtech,sx126x-stm32wl" so the
+ *     STM32WL internal-radio HAL is used instead of the external SPI driver.
+ *   - Inherit RF switch GPIOs from the base DTS (PC13 = TX, PB8 = RX).
+ *   - Add TCXO via DIO3 (1.7 V, 5 ms startup) — not in the base DTS.
+ *   - Delete rfo-hp-max-power and override to LP PA at +14 dBm
+ *     (STM32WLE5 internal radio exposes the LP path only).
+ *   - Set LDO regulator mode.
+ */
+
+#include <dt-bindings/lora/sx126x.h>
+
+&subghzspi {
+    status = "okay";
+
+    lora_usp: radio@0 {
+        /* Replace the compatible: use the STM32WL internal-radio USP driver. */
+        compatible = "semtech,sx126x-stm32wl";
+        status = "okay";
+
+        /* SPI speed (required by spi-device.yaml which we inherit) */
+        spi-max-frequency = <8000000>;
+
+        /* RF switch GPIOs are inherited from rak3172.dtsi:
+         *   PC13 (FE_CTRL1) = tx-enable-gpios  (HIGH during TX)
+         *   PB8  (FE_CTRL2) = rx-enable-gpios  (HIGH during RX)
+         * DIO2 is not wired to the RF switch on RAK3172. */
+
+        /* TCXO: DIO3 supplies 1.7 V, 5 ms startup (RAK3172 schematic).
+         * Not present in rak3172.dtsi — must be added here. */
+        dio3-tcxo-voltage           = <SX126X_DIO3_TCXO_1V7>;
+        tcxo-power-startup-delay-ms = <5>;
+
+        /* STM32WLE5 internal radio only exposes the LP PA path.
+         * Delete the HP property from the base DTS and select LP PA. */
+        /delete-property/ rfo-hp-max-power;
+        power-amplifier-output = "rfo-lp";
+        rfo-lp-max-power       = <14>;
+
+        /* LDO regulator (no DC-DC on RAK3172) */
+        regulator-ldo;
+    };
+};
+
+/* Alias required by USP sample applications, and chosen for the USP thread */
+/ {
+    aliases {
+        lora-transceiver0 = &lora_usp;
+    };
+
+    chosen {
+        zephyr,lorawan-transceiver = &lora_usp;
+    };
+};
+
+/* LoRaWAN credentials (placeholder — replace with real values before flashing) */
+#include "user_keys.overlay"
